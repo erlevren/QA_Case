@@ -29,13 +29,13 @@ jobs:
         if: always()
         uses: dawidd6/action-send-mail@v3
         with:
-          server_address: "${{ secrets.SMTP_SERVER }}"
-          server_port: "${{ secrets.SMTP_PORT }}"
-          username: "${{ secrets.SMTP_USERNAME }}"
-          password: "${{ secrets.SMTP_PASSWORD }}"
+          server_address: smtp.gmail.com
+          server_port: 465
+          username: ${{ secrets.SMTP_USERNAME }}
+          password: ${{ secrets.SMTP_PASSWORD }}
           subject: "[K6 Test] Status: ${{ job.status }}"
-          to: "${{ secrets.MAIL_TO }}"
-          from: "${{ secrets.MAIL_FROM }}"
+          to: erlevren@gmail.com
+          from: <${{ secrets.EMAIL_USERNAME }}>
           secure: true
           html_body: |
             <h3>K6 Performance Test Report</h3>
