@@ -17,31 +17,31 @@ jobs:
         with:
           python-version: '3.13'
 
-      - name: Install dependencies
+      - name: Install dependencies & browsers
         working-directory: playwright-python
         run: |
           python -m pip install -U pip
           pip install -r requirements.txt
           python -m playwright install --with-deps
 
-      - name: Run Playwright tests and generate HTML/JUnit
+      - name: Run Playwright tests and generate detailed HTML report
         working-directory: playwright-python
         run: |
           pytest \
             --maxfail=1 --disable-warnings \
-            --html=report.html --self-contained-html \
-            --junitxml=results.xml
+            --html-report=reports \
+            --title="Playwright E2E Test Report"
 
-      - name: Upload HTML report (artifact)
+      - name: Upload full HTML report folder (artifact)
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: playwright-report
           path: |
-            playwright-python/report.html
-            playwright-python/results.xml
+            playwright-python/reports/**   
+          retention-days: 7                
 
-      - name: Send email with HTML & JUnit attachments
+      - name: Send email with HTML report attached
         if: always()
         uses: dawidd6/action-send-mail@v3
         with:
@@ -54,13 +54,12 @@ jobs:
           to: "${{ secrets.MAIL_TO }}"
           subject: "[Playwright E2E] Status: ${{ job.status }} • Run #${{ github.run_number }}"
           html_body: |
-            <h2>Playwright E2E Results</h2>
+            <h2>Playwright E2E Detailed Report</h2>
             <p><b>Status:</b> ${{ job.status }}</p>
             <p>Repo: ${{ github.repository }} / Branch: ${{ github.ref_name }}</p>
             <p><a href="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}">
               Open full run logs on GitHub
             </a></p>
-            <p>Attachments: <code>report.html</code> (detailed), <code>results.xml</code> (JUnit)</p>
+            <p>Attachment: <code>index.html</code></p>
           attachments: |
-            playwright-python/report.html
-            playwright-python/results.xml
+            playwright-python/reports/index.html

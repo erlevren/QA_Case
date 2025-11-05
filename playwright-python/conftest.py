@@ -1,4 +1,5 @@
 import pytest
+from slugify import slugify 
 
 @pytest.fixture(scope="session")
 def browser_context_args(browser_context_args):
@@ -16,8 +17,31 @@ def browser_type_launch_args(browser_type_launch_args):
         "slow_mo": 500,     
     }
 """
+@pytest.hookimpl(tryfirst=True, hookwrapper=True)
+def pytest_runtest_makereport(item):
+    # her faz için rapor objesi oluştur
+    outcome = yield
+    rep = outcome.get_result()
+    setattr(item, "rep_" + rep.when, rep)
+
+@pytest.fixture(autouse=True)
+def screenshot_on_failure(request, page):
+    yield
+    # test "call" aşamasında fail olduysa ekran görüntüsü al
+    if hasattr(request.node, "rep_call") and request.node.rep_call.failed:
+        os.makedirs("reports/screenshots", exist_ok=True)
+        name = slugify(request.node.nodeid, max_length=120)
+        ts = datetime.utcnow().strftime("%Y%m%d-%H%M%S")
+        path = f"reports/screenshots/{name}-{ts}.png"
+        try:
+            page.screenshot(path=path, full_page=True)
+            print(f"[screenshot] saved: {path}")
+        except Exception as e:
+            print(f"[screenshot] failed: {e}")
 
 
+
+# Test Data
 
 BASE_URL = "https://www.saucedemo.com/"
 
