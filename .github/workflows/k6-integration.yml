@@ -1,0 +1,47 @@
+name: k6-integration
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  k6-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup k6
+        uses: grafana/setup-k6-action@v1
+
+      - name: Run REST Countries smoke
+        uses: grafana/run-k6-action@v1
+        with:
+          path: k6/rest/restcountries-smoke.js
+
+      - name: Run Rick & Morty GraphQL
+        uses: grafana/run-k6-action@v1
+        with:
+          path: k6/graphql/rickmorty-characters.js
+
+      - name: Send email notification
+        if: always()
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: "${{ secrets.SMTP_SERVER }}"
+          server_port: "${{ secrets.SMTP_PORT }}"
+          username: "${{ secrets.SMTP_USERNAME }}"
+          password: "${{ secrets.SMTP_PASSWORD }}"
+          subject: "[K6 Test] Status: ${{ job.status }}"
+          to: "${{ secrets.MAIL_TO }}"
+          from: "${{ secrets.MAIL_FROM }}"
+          secure: true
+          html_body: |
+            <h3>K6 Performance Test Report</h3>
+            <p><b>Status:</b> ${{ job.status }}</p>
+            <p><b>Branch:</b> ${{ github.ref_name }}</p>
+            <p><a href="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}">View detailed logs on GitHub</a></p>
+
+
+        
