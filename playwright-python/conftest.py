@@ -7,6 +7,12 @@ import logging
 
 logging.basicConfig(level=logging.INFO, force=True)
 
+# ===============================================================
+# BROWSER CONFIGURATION FIXTURES
+# ---------------------------------------------------------------
+# browser_context_args:
+# - Sets the viewport size for all Playwright test sessions.
+# ---------------------------------------------------------------
 @pytest.fixture(scope="session")
 def browser_context_args(browser_context_args):
     return { 
@@ -14,7 +20,11 @@ def browser_context_args(browser_context_args):
         "viewport": { "width": 1280, "height": 800 }
         }
 
-
+# browser_type_launch_args:
+# - Defines browser launch options.
+# - In CI (Continuous Integration) it runs headless and faster.
+# - Locally, it runs with a delay for better debugging.
+# ===============================================================
 @pytest.fixture(scope="session")
 def browser_type_launch_args(browser_type_launch_args):
     ci = os.getenv("CI", "false").lower() == "true"
@@ -24,13 +34,13 @@ def browser_type_launch_args(browser_type_launch_args):
         "slow_mo": 0 if ci else 500,         
     }
 # ===============================================================
-# PYTEST TEST RAPORLAMA HOOK’U
+# PYTEST TEST REPORTING HOOK
 # ---------------------------------------------------------------
 # pytest_runtest_makereport:
-# - Her testin üç aşamasını (setup, call, teardown) izler.
-# - Sonuç nesnesini (rep) test objesine ekler.
-# - Böylece fixture içinde testin "call" aşamasında fail olup
-#   olmadığını anlayabiliriz.
+# - Tracks each test’s three phases (setup, call, teardown).
+# - Saves the result object (rep) to the test item.
+# - Allows detecting if a test failed in the “call” phase
+#   inside a fixture.
 # ===============================================================
 @pytest.hookimpl(tryfirst=True, hookwrapper=True)
 def pytest_runtest_makereport(item):
@@ -39,14 +49,14 @@ def pytest_runtest_makereport(item):
     setattr(item, "rep_" + rep.when, rep)
 
 # ===============================================================
-# OTOMATİK EKRAN GÖRÜNTÜSÜ FİXTURE’I
+# AUTOMATIC SCREENSHOT FIXTURE
 # ---------------------------------------------------------------
 # screenshot_on_failure:
-# - Tüm testlerde otomatik (autouse=True) çalışır.
-# - Testin "call" aşamasında hata (fail) olursa ekran görüntüsü alır.
-# - Kaydı "reports/screenshots" klasörüne yapar.
-# - Dosya adı test kimliği + UTC zaman damgası şeklindedir.
-# - Log çıktısını logging.info ile verir (CI'da da görünür).
+# - Automatically runs for all tests (autouse=True).
+# - Captures a screenshot if the test fails during the “call” phase.
+# - Saves it under "reports/screenshots".
+# - File name includes test ID + UTC timestamp.
+# - Uses logging.info for console and CI visibility.
 # ===============================================================
 @pytest.fixture(autouse=True)
 def screenshot_on_failure(request, page):
@@ -63,13 +73,13 @@ def screenshot_on_failure(request, page):
             logging.info(f"[screenshot] failed: {e}")
 
 # ===============================================================
-# MANUEL EKRAN GÖRÜNTÜSÜ HELPER’I
+# MANUAL SCREENSHOT HELPER
 # ---------------------------------------------------------------
 # take_screenshot:
-# - Test içinde istediğin anda ekran görüntüsü alır.
-# - Timestamp ekleyerek benzersiz dosya üretir.
-# - Dosyayı "reports/screenshots" klasörüne kaydeder.
-# - Lokalde ve CI ortamında logging.info ile görünür.
+# - Allows you to capture screenshots manually during tests.
+# - Appends a timestamp to create a unique filename.
+# - Saves files under "reports/screenshots".
+# - Uses logging.info for output (visible locally and in CI logs).
 # ===============================================================
 def take_screenshot(page, name="screenshot", folder="reports/screenshots", full_page=True):
     out = Path(folder)
@@ -81,8 +91,16 @@ def take_screenshot(page, name="screenshot", folder="reports/screenshots", full_
     return str(path)
 
 
-# Test Data
-
+# ===============================================================
+# TEST DATA
+# ---------------------------------------------------------------
+# Defines user credentials for all login scenarios:
+# - correctUser: valid user
+# - lockedUser: blocked account
+# - wrongPass / emptyUsername / emptyPassword: negative cases
+# - problemUser / visualUser / performanceUser / errorUser:
+#   special test accounts with known issues
+# ===============================================================
 BASE_URL = "https://www.saucedemo.com/"
 
 USERS = {
@@ -123,6 +141,17 @@ USERS = {
         "password": "secret_sauce"
     }
 }
+
+# ===============================================================
+# FIXTURES FOR TEST DATA
+# ---------------------------------------------------------------
+# login_failure_users:
+# - Returns a list of keys for negative login tests.
+# base_url:
+# - Returns the base URL for the test site.
+# user_data:
+# - Returns the complete user dictionary for use in tests.
+# ===============================================================
 @pytest.fixture
 def login_failure_users():
     return [
