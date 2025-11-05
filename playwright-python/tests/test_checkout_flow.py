@@ -4,7 +4,7 @@ from playwright.sync_api import expect
 @pytest.mark.order(8)
 def test_positive_full_flow(page, base_url, user_data):
     # 1) Login
-    user = user_data["correctUser1"]
+    user = user_data["correctUser"]
     page.goto(base_url)
     page.get_by_placeholder("Username").fill(user["username"])
     page.get_by_placeholder("Password").fill(user["password"])
