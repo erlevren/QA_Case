@@ -209,6 +209,8 @@ This **K6 API testing module** demonstrates a balanced and CI-ready approach for
 
 Perfectly aligned for **real-world continuous testing pipelines** that combine correctness, performance, and maintainability.
 
+---
+
 # 🧪 Playwright UI E2E Tests (Login + Checkout)
 
 This project tests the **SauceDemo** application’s user login, special user behaviors (problem accounts), and checkout (order completion) flow using **Playwright (Python)**.  
