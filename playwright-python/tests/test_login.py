@@ -1,6 +1,8 @@
 import pytest
 from playwright.sync_api import expect
 import logging
+from conftest import take_screenshot
+
 logging.basicConfig(level=logging.INFO, force=True)
 
 @pytest.mark.order(1)
@@ -81,6 +83,7 @@ def test_login_visual_success(page, base_url, user_data):
     page.get_by_placeholder("Password").fill(user["password"])
     page.locator("//input[@id='login-button']").click()
     page.get_by_text("Products").wait_for(timeout=5000)
+    take_screenshot(page, name="visual_user_login")
     assert "/inventory.html" in page.url     
 
 #Negative Login Tests

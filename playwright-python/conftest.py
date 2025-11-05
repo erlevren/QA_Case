@@ -1,7 +1,8 @@
 import pytest
 from slugify import slugify 
 import os
-from datetime import datetime
+from pathlib import Path
+from datetime import datetime, timezone
 
 @pytest.fixture(scope="session")
 def browser_context_args(browser_context_args):
@@ -13,10 +14,11 @@ def browser_context_args(browser_context_args):
 
 @pytest.fixture(scope="session")
 def browser_type_launch_args(browser_type_launch_args):
+    ci = os.getenv("CI", "false").lower() == "true"
     return {
         **browser_type_launch_args,
-        "headless": False,  
-        "slow_mo": 500,     
+        "headless": True if ci else False,   # CI'da headless
+        "slow_mo": 0 if ci else 500,         # CI'da hızlan
     }
 
 @pytest.hookimpl(tryfirst=True, hookwrapper=True)
@@ -33,7 +35,7 @@ def screenshot_on_failure(request, page):
     if hasattr(request.node, "rep_call") and request.node.rep_call.failed:
         os.makedirs("reports/screenshots", exist_ok=True)
         name = slugify(request.node.nodeid, max_length=120)
-        ts = datetime.utcnow().strftime("%Y%m%d-%H%M%S")
+        ts = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
         path = f"reports/screenshots/{name}-{ts}.png"
         try:
             page.screenshot(path=path, full_page=True)
@@ -41,6 +43,14 @@ def screenshot_on_failure(request, page):
         except Exception as e:
             print(f"[screenshot] failed: {e}")
 
+def take_screenshot(page, name="screenshot", folder="reports/screenshots", full_page=True):
+    """Basit ekran görüntüsü helper'ı. Test içinde direkt çağır."""
+    out = Path(folder)
+    out.mkdir(parents=True, exist_ok=True)
+    path = out / f"{name}.png"
+    page.screenshot(path=str(path), full_page=full_page)
+    print(f"[screenshot] saved -> {path}")
+    return str(path)
 
 
 # Test Data
@@ -88,10 +98,10 @@ USERS = {
 @pytest.fixture
 def login_failure_users():
     return [
-        "lockedUser1",
-        "wrongPass1",
-        "emptyUsername1",
-        "emptyPassword1"
+        "lockedUser",
+        "wrongPass",
+        "emptyUsername",
+        "emptyPassword"
     ]
 
 @pytest.fixture(scope="session")
