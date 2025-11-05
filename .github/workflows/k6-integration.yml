@@ -3,6 +3,7 @@ name: k6-integration
 on:
   push:
   pull_request:
+  workflow_dispatch:
 
 jobs:
   k6-tests:
@@ -29,19 +30,18 @@ jobs:
         if: always()
         uses: dawidd6/action-send-mail@v3
         with:
-          server_address: smtp.gmail.com
+          server_address: "smtp.gmail.com"
           server_port: 465
-          username: ${{ secrets.SMTP_USERNAME }}
-          password: ${{ secrets.SMTP_PASSWORD }}
-          subject: "[K6 Test] Status: ${{ job.status }}"
-          to: erlevren@gmail.com
-          from: <${{ secrets.EMAIL_USERNAME }}>
           secure: true
+          username: "${{ secrets.SMTP_USERNAME }}"
+          password: "${{ secrets.SMTP_PASSWORD }}"
+          from: "${{ secrets.MAIL_FROM }}"
+          to: "${{ secrets.MAIL_TO }}"
+          subject: "[K6 Test] Status: ${{ job.status }} • Run #${{ github.run_number }}"
           html_body: |
-            <h3>K6 Performance Test Report</h3>
+            <h3>K6 Performance Test</h3>
             <p><b>Status:</b> ${{ job.status }}</p>
-            <p><b>Branch:</b> ${{ github.ref_name }}</p>
-            <p><a href="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}">View detailed logs on GitHub</a></p>
-
-
-        
+            <p>Repo: ${{ github.repository }} / Branch: ${{ github.ref_name }}</p>
+            <p><a href="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}">
+              View detailed logs on GitHub
+            </a></p>

@@ -8,52 +8,59 @@ on:
 jobs:
   e2e:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.13"
+          python-version: '3.13'
 
       - name: Install dependencies
         working-directory: playwright-python
         run: |
           python -m pip install -U pip
           pip install -r requirements.txt
-          pip install pytest-html
           python -m playwright install --with-deps
 
-      - name: Run Playwright tests and generate HTML report
+      - name: Run Playwright tests and generate HTML/JUnit
         working-directory: playwright-python
         run: |
-          pytest --html=report.html --self-contained-html --maxfail=1 --disable-warnings
+          pytest \
+            --maxfail=1 --disable-warnings \
+            --html=report.html --self-contained-html \
+            --junitxml=results.xml
 
-      - name: Upload HTML report
+      - name: Upload HTML report (artifact)
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: playwright-report
-          path: playwright-python/report.html
+          path: |
+            playwright-python/report.html
+            playwright-python/results.xml
 
-      - name: Send email with HTML report
+      - name: Send email with HTML & JUnit attachments
         if: always()
         uses: dawidd6/action-send-mail@v3
         with:
-          server_address: smtp.gmail.com
+          server_address: "smtp.gmail.com"
           server_port: 465
-          username: ${{ secrets.SMTP_USERNAME }}
-          password: ${{ secrets.SMTP_PASSWORD }}
-          subject: "[Playwright E2E] Test Status: ${{ job.status }}"
-          to: ${{ secrets.MAIL_TO }}
-          from: ${{ secrets.MAIL_FROM }}
           secure: true
+          username: "${{ secrets.SMTP_USERNAME }}"
+          password: "${{ secrets.SMTP_PASSWORD }}"
+          from: "${{ secrets.MAIL_FROM }}"
+          to: "${{ secrets.MAIL_TO }}"
+          subject: "[Playwright E2E] Status: ${{ job.status }} • Run #${{ github.run_number }}"
           html_body: |
-            <h3>Playwright E2E Test Report</h3>
+            <h2>Playwright E2E Results</h2>
             <p><b>Status:</b> ${{ job.status }}</p>
-            <p><b>Branch:</b> ${{ github.ref_name }}</p>
+            <p>Repo: ${{ github.repository }} / Branch: ${{ github.ref_name }}</p>
             <p><a href="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}">
-              View full logs and artifacts
+              Open full run logs on GitHub
             </a></p>
-          attachments: playwright-python/report.html
-
+            <p>Attachments: <code>report.html</code> (detailed), <code>results.xml</code> (JUnit)</p>
+          attachments: |
+            playwright-python/report.html
+            playwright-python/results.xml
