@@ -32,16 +32,24 @@ jobs:
             --html-report=reports \
             --title="Playwright E2E Test Report"
 
+      # Rapor klasörünü ZIP'le (index.html + assets + screenshots)
+      - name: Zip full report folder
+        if: always()
+        working-directory: playwright-python
+        run: zip -r report_bundle.zip reports
+
+      # Tüm rapor klasörünü artefakt olarak yükle (CI'da indirilebilir)
       - name: Upload full HTML report folder (artifact)
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: playwright-report
           path: |
-            playwright-python/reports/**   
-          retention-days: 7                
+            playwright-python/reports/**
+          retention-days: 7
 
-      - name: Send email with HTML report attached
+      # ZIP dosyasını mail ekinde gönder (alıcı ZIP'i açıp reports/index.html'i açacak)
+      - name: Send email with report ZIP
         if: always()
         uses: dawidd6/action-send-mail@v3
         with:
@@ -60,6 +68,7 @@ jobs:
             <p><a href="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}">
               Open full run logs on GitHub
             </a></p>
-            <p>Attachment: <code>index.html</code></p>
+            <p>Attachment: <code>report_bundle.zip</code><br/>
+            (Unzip and open <code>reports/index.html</code>)</p>
           attachments: |
-            playwright-python/reports/index.html
+            playwright-python/report_bundle.zip
