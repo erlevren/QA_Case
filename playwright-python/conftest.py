@@ -10,7 +10,7 @@ def browser_context_args(browser_context_args):
         "viewport": { "width": 1280, "height": 800 }
         }
 
-"""
+
 @pytest.fixture(scope="session")
 def browser_type_launch_args(browser_type_launch_args):
     return {
@@ -18,7 +18,7 @@ def browser_type_launch_args(browser_type_launch_args):
         "headless": False,  
         "slow_mo": 500,     
     }
-"""
+
 @pytest.hookimpl(tryfirst=True, hookwrapper=True)
 def pytest_runtest_makereport(item):
     # her faz için rapor objesi oluştur
@@ -48,39 +48,39 @@ def screenshot_on_failure(request, page):
 BASE_URL = "https://www.saucedemo.com/"
 
 USERS = {
-    "correctUser1": {      
+    "correctUser": {      
         "username": "standard_user",
         "password": "secret_sauce"
     },
-    "lockedUser1": {
+    "lockedUser": {
         "username": "locked_out_user",
         "password": "secret_sauce"
     },
-    "wrongPass1": {
+    "wrongPass": {
         "username": "standard_user",
         "password": "wrong_password"
     },
-    "emptyUsername1": {
+    "emptyUsername": {
         "username": "",
         "password": "secret_sauce"
     },
-    "emptyPassword1": {
+    "emptyPassword": {
         "username": "standard_user",
         "password": ""
     },
-    "problemUser1": {
+    "problemUser": {
         "username": "problem_user",
         "password": "secret_sauce"
     },
-    "visualUser1": {
+    "visualUser": {
         "username": "visual_user",
         "password": "secret_sauce"
     },
-    "performanceUser1": {
+    "performanceUser": {
         "username": "performance_glitch_user",
         "password": "secret_sauce"
     },
-    "errorUser1": {
+    "errorUser": {
         "username": "error_user",
         "password": "secret_sauce"
     }

@@ -1,7 +1,7 @@
 import pytest
 from playwright.sync_api import expect
 
-@pytest.mark.order(3)
+@pytest.mark.order(8)
 def test_positive_full_flow(page, base_url, user_data):
     # 1) Login
     user = user_data["correctUser1"]
@@ -23,7 +23,6 @@ def test_positive_full_flow(page, base_url, user_data):
     for i in range(total_products):
         name = names_locator.nth(i).inner_text().strip()
         product_names.append(name)
-
         names_locator.nth(i).click()
         # Detay sayfası açıldı mı ve isim eşleşiyor mu?
         expect(page.locator(".inventory_details_name")).to_be_visible(timeout=10000)
@@ -87,7 +86,7 @@ def test_positive_full_flow(page, base_url, user_data):
 
     
 
-@pytest.mark.order(4)
+@pytest.mark.order(9)
 def test_checkout_happy_path(page,base_url):
   page.goto(base_url)
   page.get_by_placeholder("Username").fill("standard_user")
