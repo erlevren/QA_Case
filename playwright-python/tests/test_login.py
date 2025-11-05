@@ -28,37 +28,39 @@ def test_login_problem(page, base_url, user_data):
     page.get_by_placeholder("Password").fill(user["password"])
     page.locator("//input[@id='login-button']").click()
     page.get_by_text("Products").wait_for(timeout=5000)
-    assert "/inventory.html" in page.url, "Login başarısız veya yönlendirme olmadı."
+    assert "/inventory.html" in page.url, "Fail Login."
 
     names_locator = page.locator(".inventory_item_name")
     total_products = names_locator.count()
-    assert total_products > 0, "Hiç ürün bulunamadı."
+    assert total_products > 0, "empty."
 
-    # Add to cart butonlarını bul
+    # Find Add to cart buttons and click them
     add_buttons = page.locator("button.btn_inventory")
     total_buttons = add_buttons.count()
-    print(f"Toplam {total_buttons} adet 'Add to cart' butonu bulundu.")
+    logging.info(f"Toplam {total_buttons} adet 'Add to cart' butonu bulundu.")
+    assert total_buttons == total_products, "Add to cart buton sayisi ürün sayisiyla eşleşmiyor."
+    take_screenshot(page, name="products_page_problem_user")
 
-    # Yalnızca tıklanabilir (enabled ve visible) olanlara tıkla
+    # Just try to click each button, log if any issues
     for i in range(total_buttons):
         button = add_buttons.nth(i)
         try:
             if button.is_visible() and button.is_enabled():
                 button.click()
-                print(f"{i+1}. ürün sepete eklendi.")
+                logging.info(f"{i+1}. product added.")
             else:
-                print(f"{i+1}. ürün butonu devre dışı, atlandı.")
+                logging.info(f"{i+1}. product button inactive")
         except Exception as e:
-            print(f"{i+1}. ürün tıklanamadı: {e}")
+            logging.info(f"{i+1}. product dont click: {e}")
 
-    # Sepetteki sayıyı doğrula
+    # Verify the number in the cart.
     cart_badge = page.locator(".shopping_cart_badge")
     if cart_badge.is_visible():
         cart_count = int(cart_badge.inner_text().strip())
-        print(f"Sepette {cart_count} ürün var.")
-        assert cart_count > 0, "Sepet boş olmamalı."
+        logging.info(f"There are {cart_count} items in the cart")
+        assert cart_count > 0, "The cart should not be empty."
     else:
-        print("Sepet rozeti görünmüyor — muhtemelen hiçbir ürün eklenemedi.")
+        logging.info("Cart badge is not visible — probably no items were added.")
 
 @pytest.mark.order(3)
 #Pozitive Login Performance Test
@@ -101,5 +103,6 @@ def test_login_failure(page, base_url, user_data, login_failure_users):
         expect(error_banner).to_be_visible(timeout=5000)
         expect(error_banner).to_contain_text("Epic sadface")
         assert "/inventory.html" not in page.url
+        take_screenshot(page, name="fail")
 
 

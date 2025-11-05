@@ -3,6 +3,9 @@ from slugify import slugify
 import os
 from pathlib import Path
 from datetime import datetime, timezone
+import logging
+
+logging.basicConfig(level=logging.INFO, force=True)
 
 @pytest.fixture(scope="session")
 def browser_context_args(browser_context_args):
@@ -17,21 +20,37 @@ def browser_type_launch_args(browser_type_launch_args):
     ci = os.getenv("CI", "false").lower() == "true"
     return {
         **browser_type_launch_args,
-        "headless": True if ci else False,   # CI'da headless
-        "slow_mo": 0 if ci else 500,         # CI'da hızlan
+        "headless": True if ci else False,   
+        "slow_mo": 0 if ci else 500,         
     }
-
+# ===============================================================
+# PYTEST TEST RAPORLAMA HOOK’U
+# ---------------------------------------------------------------
+# pytest_runtest_makereport:
+# - Her testin üç aşamasını (setup, call, teardown) izler.
+# - Sonuç nesnesini (rep) test objesine ekler.
+# - Böylece fixture içinde testin "call" aşamasında fail olup
+#   olmadığını anlayabiliriz.
+# ===============================================================
 @pytest.hookimpl(tryfirst=True, hookwrapper=True)
 def pytest_runtest_makereport(item):
-    # her faz için rapor objesi oluştur
     outcome = yield
     rep = outcome.get_result()
     setattr(item, "rep_" + rep.when, rep)
 
+# ===============================================================
+# OTOMATİK EKRAN GÖRÜNTÜSÜ FİXTURE’I
+# ---------------------------------------------------------------
+# screenshot_on_failure:
+# - Tüm testlerde otomatik (autouse=True) çalışır.
+# - Testin "call" aşamasında hata (fail) olursa ekran görüntüsü alır.
+# - Kaydı "reports/screenshots" klasörüne yapar.
+# - Dosya adı test kimliği + UTC zaman damgası şeklindedir.
+# - Log çıktısını logging.info ile verir (CI'da da görünür).
+# ===============================================================
 @pytest.fixture(autouse=True)
 def screenshot_on_failure(request, page):
     yield
-    # test "call" aşamasında fail olduysa ekran görüntüsü al
     if hasattr(request.node, "rep_call") and request.node.rep_call.failed:
         os.makedirs("reports/screenshots", exist_ok=True)
         name = slugify(request.node.nodeid, max_length=120)
@@ -39,17 +58,26 @@ def screenshot_on_failure(request, page):
         path = f"reports/screenshots/{name}-{ts}.png"
         try:
             page.screenshot(path=path, full_page=True)
-            print(f"[screenshot] saved: {path}")
+            logging.info(f"[screenshot] saved: {path}")
         except Exception as e:
-            print(f"[screenshot] failed: {e}")
+            logging.info(f"[screenshot] failed: {e}")
 
+# ===============================================================
+# MANUEL EKRAN GÖRÜNTÜSÜ HELPER’I
+# ---------------------------------------------------------------
+# take_screenshot:
+# - Test içinde istediğin anda ekran görüntüsü alır.
+# - Timestamp ekleyerek benzersiz dosya üretir.
+# - Dosyayı "reports/screenshots" klasörüne kaydeder.
+# - Lokalde ve CI ortamında logging.info ile görünür.
+# ===============================================================
 def take_screenshot(page, name="screenshot", folder="reports/screenshots", full_page=True):
-    """Basit ekran görüntüsü helper'ı. Test içinde direkt çağır."""
     out = Path(folder)
     out.mkdir(parents=True, exist_ok=True)
-    path = out / f"{name}.png"
+    ts = datetime.now().strftime("%Y%m%d-%H%M%S-%f")
+    path = out / f"{name}-{ts}.png"
     page.screenshot(path=str(path), full_page=full_page)
-    print(f"[screenshot] saved -> {path}")
+    logging.info(f"[screenshot] saved -> {path}")
     return str(path)
 
 
