@@ -208,3 +208,190 @@ This **K6 API testing module** demonstrates a balanced and CI-ready approach for
 - 🔹 Seamless **CI/CD integration** ensuring reliability and visibility of regressions  
 
 Perfectly aligned for **real-world continuous testing pipelines** that combine correctness, performance, and maintainability.
+
+# 🧪 Playwright UI E2E Tests (Login + Checkout)
+
+This project tests the **SauceDemo** application’s user login, special user behaviors (problem accounts), and checkout (order completion) flow using **Playwright (Python)**.  
+The goal is to validate both **functional correctness** and **expected faulty behaviors** step by step — similar to a real QA case study.
+
+---
+
+## 🔍 Test Scope
+
+### 👤 Login Scenarios
+- Positive login (valid user credentials)
+- Negative login (wrong or missing credentials)
+- Special user behaviors (`problem_user`, `error_user`, `visual_user`, `performance_user`)
+
+### 🛒 Checkout Scenario
+- Add product(s) to the cart  
+- View cart and proceed to checkout  
+- Fill out checkout form (First Name, Last Name, Zip Code)  
+- Complete the order and verify the confirmation page  
+
+---
+
+## ⚙️ Technology & Tools
+
+| Component       | Description                                                                          |
+|-----------------|--------------------------------------------------------------------------------------|
+| **Framework**   | Pytest + Playwright                                                                  |
+| **Language**    | Python                                                                               |
+| **Screenshots** | Managed via `conftest.py`: automatic (on failure) and manual (`take_screenshot()`)   |
+| **Browser**     | Headless (CI) / Visible (Local)                                                      |
+| **Reports**     | Saved under `reports/screenshots` as PNG files                                       |
+| **CI/CD**       | GitHub Actions integration for automated execution                                   |
+
+---
+
+## 🧠 Validation Points
+
+### 🟢 Positive Scenarios
+- Successful login with valid credentials  
+- Products page visible after login  
+- Add to cart and checkout flow complete successfully  
+
+### 🔴 Negative Scenarios
+- Invalid username/password combinations  
+- Empty username or password fields  
+- Expected UI and functional bugs for special users  
+
+---
+
+## 👥 User Data
+
+| User                             | Type     | Expected Behavior                                         |
+|----------------------------------|----------|-----------------------------------------------------------|
+| `standard_user`                  | Positive | Successful login, normal flow                             |
+| `locked_out_user`                | Negative | Login denied                                              |
+| `problem_user`                   | Special  | Broken images and malfunctioning buttons                  |
+| `visual_user`                    | Special  | Page layout differs from normal                           |
+| `performance_glitch_user`        | Special  | Product page loads slowly                                 |
+| `error_user`                     | Special  | “Finish” button visible but not clickable during checkout |
+| `wrong_password`, `empty fields` | Negative | “Epic sadface” error displayed                            |
+
+---
+
+## 🧾 Test Steps
+
+### 1️⃣ Positive Login
+**File:** `tests/test_login.py → test_login_success`
+
+#### Steps:
+1. Login with `standard_user`.  
+2. “Products” heading is displayed.  
+3. URL should be `/inventory.html`.
+
+📷 **Screenshot:** `after-login.png`
+
+---
+
+### 2️⃣ Negative Login Tests
+**File:** `tests/test_login.py → test_login_failure`
+
+#### Steps:
+1. Attempt login with invalid users (`lockedUser`, `wrongPass`, `emptyUsername`, `emptyPassword`).  
+2. “Epic sadface” error appears on each attempt.  
+3. No navigation to `/inventory.html`.
+
+📷 **Screenshots:**
+- `login-fail-lockedUser.png`
+- `login-fail-wrongPass.png`
+
+---
+
+### 3️⃣ Problem User – Visual and Form Bugs
+**File:** `tests/test_login.py → test_login_problemuser`
+
+#### Observed Bugs:
+- Product images are identical.  
+- Some “Add to Cart” buttons do not work.  
+- Checkout form behaves incorrectly:
+  - After entering “First Name”, typing a single character in “Last Name” overwrites it.  
+  - Even with Zip Code filled, clicking **Continue** shows **Error: First Name is required**.
+
+📷 **Screenshots:**
+- `problem-user-products.png`
+- `problem-user-checkout-error.png`
+
+---
+
+### 4️⃣ Error User – Finish Button Issue
+**File:** `tests/test_login.py → test_login_erroruser`
+
+#### Steps:
+1. Login with `error_user`.  
+2. Add all products to the cart.  
+3. Fill out the checkout form.  
+4. “Finish” button appears but cannot be clicked.
+
+📷 **Screenshots:**
+- `error-user-products.png`
+- `error-user-finish-button.png`
+
+---
+
+### 5️⃣ Visual User – Layout Differences
+**File:** `tests/test_login.py → test_login_visual_success`
+
+#### Behavior:
+- Login succeeds but UI layout differs from the standard user.  
+- Screenshot taken to record layout differences.
+
+📷 **Screenshot:** `visual-user-layout.png`
+
+---
+
+### 6️⃣ Performance User – Slow Page Load
+**File:** `tests/test_login.py → test_login_performance_success`
+
+#### Behavior:
+- “Products” page loads slowly.  
+- Functionality remains correct, only latency is affected.
+
+📷 **Screenshot:** `performance-user-products.png`
+
+---
+
+### 7️⃣ Checkout – Happy Path
+**File:** `tests/test_checkout_flow.py → test_checkout_happy_path`
+
+#### Steps:
+1. Login with `standard_user`.  
+2. Add a product to the cart.  
+3. Fill out the checkout form (First, Last, Zip).  
+4. Click “Continue”.  
+5. Verify “Payment Information”, “Shipping Information”, and “Price Total” sections.  
+6. Click “Finish”.  
+7. Confirm the order screen:
+   - ✅ “Thank you for your order!” text  
+   - ✅ Description message  
+   - ✅ “Back Home” button  
+8. Click “Back Home” → verify return to `/inventory.html`.
+
+📷 **Screenshots:**
+- `checkout-overview.png`
+- `checkout-confirmation.png`
+
+---
+
+## 🧠 Known Issues (Bug Summary)
+
+| User                 | Issue Description                                                                                         |
+|----------------------|-----------------------------------------------------------------------------------------------------------|
+| **problemUser**      | Typing a single character in Last Name clears First Name; “Error: First Name is required” after Continue. |
+| **errorUser**        | Finish button visible but unclickable.                                                                    |
+| **visualUser**       | Layout differs; element positions shifted.                                                                |
+| **performanceUser**  | Products page loads slower than expected.                                                                 |
+
+---
+
+## 📸 Screenshot Placeholders
+
+```
+![After Login](reports/screenshots/after-login.png)
+![Locked User Error](reports/screenshots/login-fail-lockedUser.png)
+![Problem User Checkout Error](reports/screenshots/problem-user-checkout-error.png)
+![Error User Finish Button](reports/screenshots/error-user-finish-button.png)
+![Checkout Confirmation](reports/screenshots/checkout-confirmation.png)
+```
