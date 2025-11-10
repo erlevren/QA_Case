@@ -21,7 +21,7 @@ export default function () {
   `;
   const variables = { page: 1 };
 
-  // POSITIVE
+  //POSITIVE
   const res = http.post(url, JSON.stringify({ query, variables }), {
     headers: { 'Content-Type': 'application/json' },
     tags: { req: 'positive' },
@@ -51,7 +51,7 @@ export default function () {
      });
   }
 
-  // NEGATIVE
+  //NEGATIVE
   const bad = http.post(url, JSON.stringify({ query: 'query { nopeField }' }), {
     headers: { 'Content-Type': 'application/json' },
     tags: { req: 'negative' },
