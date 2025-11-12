@@ -1,9 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-#!/usr/bin/env bash
-set -euo pipefail
-
 echo "Running K6 REST..."
 k6 run ../k6/rest/restcountries-smoke.js
 
@@ -19,4 +16,4 @@ pip install -r requirements.txt
 pip install pytest-html
 python -m playwright install
 
-pytest -q --html=report.html --self-contained-html
+python -m pytest -q --html=report.html --self-contained-html
